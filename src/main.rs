@@ -8,37 +8,30 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::env;
 
-pub fn search_file(file_path: String, search_string: &'static str){
-    let mut results: Vec<(String, u32)> = Vec::new();
-    match File::open(file_path) {
-        Ok(f) => {
-            let reader = BufReader::new(f);
-            let lines = reader.lines().map(|l| l.unwrap());
-            let mut enumerate = lines.zip(0..);
-            loop {
-                match enumerate.next() {
-                    Some ((line, num)) => {
-                        if line.as_str().contains(search_string) {
-                            results.push((line, num));
-                        }
-                    },
-                    None => break
-                }
-            }
-        },
-        Err(msg) => {
-            panic!("Cannot open file. {}", msg);
+pub fn search_file(file_path: String, needle: &'static str){
+    let mut results: Vec<(Vec<String>, u32)> = Vec::new();
+    let file = File::open(file_path.clone()).unwrap_or_else(|err| {
+        panic!("Unable to open {}: {}", file_path, err)
+    });
+    for (num, line) in (0..).zip(BufReader::new(file).lines().filter_map(move |res| res.ok())) {
+        // let split = line.split(needle);
+        // let sp: Vec<String> = split.map(|x| x.to_string()).collect();
+        let split: Vec<String> = line.split(needle)
+                                     .map(|x| x.to_string())
+                                     .collect();
+        if split.len() != 1 || split[0] != "" {
+            results.push((split, num));
         }
-    };
+    }
     let mut result_iter = results.into_iter();
-    loop {
-        match result_iter.next() {
-            Some((line, num)) => {
-                println!("{}| {}", num, line);
-            },
-            None => break
-        }
-    };
+    while let Some((split_string, index)) = result_iter.next() {
+        print!("{}| {:?}", index, split_string);
+        // while let Some(string) = split_string.iter().next() {
+        //     if string != "" {
+        //         print!("{}", string);
+        //     }
+        // }
+    }
 }
 
 pub fn main() {
