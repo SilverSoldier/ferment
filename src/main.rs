@@ -115,7 +115,13 @@ pub fn main() {
 
     let recursive = matches.opt_present("r");
     let n_threads = match matches.opt_str("j") {
-        Some(n) => n.parse::<usize>().unwrap(),
+        Some(num) => match num.parse::<usize>() {
+            Ok(n) => n,
+            Err(msg) => {
+                println!("Number of jobs ({}) should be an integer. {}", num, msg);
+                return;
+            }
+        },
         None => 1
     };
 
